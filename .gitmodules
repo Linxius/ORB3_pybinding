@@ -1,4 +1,7 @@
-[submodule "pybind11"]
-	path = pybind11
+[submodule "ORB_SLAM3_MS"]
+	path = extern/ORB_SLAM3_MS
+	url = https://github.com/Linxius/ORB_SLAM3.git
+[submodule "extern/pybind11"]
+	path = extern/pybind11
 	url = https://github.com/pybind/pybind11.git
-	branch = master
+	branch = stable

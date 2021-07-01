@@ -26,7 +26,8 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
-        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        extdir = os.path.abspath(os.path.dirname(
+            self.get_ext_fullpath(ext.name)))
 
         # required for auto-detection of auxiliary "native" libs
         if not extdir.endswith(os.path.sep):
@@ -44,8 +45,10 @@ class CMakeBuild(build_ext):
         cmake_args = [
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={}".format(extdir),
             "-DPYTHON_EXECUTABLE={}".format(sys.executable),
-            "-DEXAMPLE_VERSION_INFO={}".format(self.distribution.get_version()),
-            "-DCMAKE_BUILD_TYPE={}".format(cfg),  # not used on MSVC, but no harm
+            "-DEXAMPLE_VERSION_INFO={}".format(
+                self.distribution.get_version()),
+            # not used on MSVC, but no harm
+            "-DCMAKE_BUILD_TYPE={}".format(cfg),
         ]
         build_args = []
 
@@ -61,7 +64,8 @@ class CMakeBuild(build_ext):
         else:
 
             # Single config generators are handled "normally"
-            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
+            single_config = any(
+                x in cmake_generator for x in {"NMake", "Ninja"})
 
             # CMake allows an arch-in-generator style for backward compatibility
             contains_arch = any(x in cmake_generator for x in {"ARM", "Win64"})
@@ -75,7 +79,8 @@ class CMakeBuild(build_ext):
             # Multi-config generators have a different way to specify configs
             if not single_config:
                 cmake_args += [
-                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(cfg.upper(), extdir)
+                    "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}".format(
+                        cfg.upper(), extdir)
                 ]
                 build_args += ["--config", cfg]
 
@@ -101,14 +106,25 @@ class CMakeBuild(build_ext):
 
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
+# setup(
+#     name="cmake_example",
+#     version="0.0.1",
+#     author="Dean Moldovan",
+#     author_email="dean0x7d@gmail.com",
+#     description="A test project using pybind11 and CMake",
+#     long_description="",
+#     ext_modules=[CMakeExtension("cmake_example")],
+#     cmdclass={"build_ext": CMakeBuild},
+#     zip_safe=False,
+# )
 setup(
-    name="cmake_example",
+    name="orbslam",
     version="0.0.1",
-    author="Dean Moldovan",
-    author_email="dean0x7d@gmail.com",
-    description="A test project using pybind11 and CMake",
+    author="Liqiang Lin",
+    author_email="linliqiang2020@gmail.com",
+    description="",
     long_description="",
-    ext_modules=[CMakeExtension("cmake_example")],
+    ext_modules=[CMakeExtension("orbslam")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
 )

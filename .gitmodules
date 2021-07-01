@@ -1,5 +1,5 @@
-[submodule "ORB_SLAM3_MS"]
-	path = extern/ORB_SLAM3_MS
+[submodule "ORB_SLAM3"]
+	path = extern/ORB_SLAM3
 	url = https://github.com/Linxius/ORB_SLAM3.git
 [submodule "extern/pybind11"]
 	path = extern/pybind11

@@ -1,4 +1,8 @@
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+
+#include "cvt.h"
+
 namespace py = pybind11;
 
 #include <algorithm>
@@ -204,6 +208,130 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
   }
 }
 
+class System {
+public:
+  // SLAM(string arg1 = ARG1, string arg2 = ARG2, string arg3 = ARG3) {
+  System(const string arg1 = ARG1, const string arg2 = ARG2,
+         const string arg3 = ARG3, const string arg4 = ARG4,
+         const string arg5 = ARG5)
+
+      : SLAM_System(arg1, arg2, ORB_SLAM3::System::MONOCULAR, true) {
+
+    const int num_seq = 1;
+    //   cout << "num_seq = " << num_seq << endl;
+    //   bool bFileName = (((argc - 3) % 2) == 1);
+    string file_name = arg5;
+    //   if (bFileName) {
+    //   file_name = string(argv[argc - 1]);
+    //   file_name = string(argv[argc - 1]);
+    //   cout << "file name: " << file_name << endl;
+    //   }
+
+    // Load all sequences:
+    int seq = 0;
+
+    vstrImageFilenames.resize(num_seq);
+    vTimestampsCam.resize(num_seq);
+    nImages.resize(num_seq);
+
+    int tot_images = 0;
+    //   for (seq = 0; seq < num_seq; seq++) {
+    cout << "Loading images for sequence " << seq << "...";
+    // LoadImages(string(argv[(2 * seq) + 3]) + "/mav0/cam0/data",
+    //            string(argv[(2 * seq) + 4]), vstrImageFilenames[seq],
+    //            vTimestampsCam[seq]);
+    LoadImages(arg3 + "/mav0/cam0/data", arg4, vstrImageFilenames[seq],
+               vTimestampsCam[seq]);
+    cout << "LOADED!" << endl;
+
+    nImages[seq] = vstrImageFilenames[seq].size();
+    tot_images += nImages[seq];
+    //   }
+
+    // Vector for tracking time statistics
+    vTimesTrack.resize(tot_images);
+
+    cout << endl << "-------" << endl;
+    cout.precision(17);
+  }
+
+  ~System() { SLAM_System.Shutdown(); }
+
+  py::array step(py::array_t<uint8_t> &img) {
+    cv::Mat img2 = CVT::nparray_to_mat(img);
+    // return CVT::mat_to_nparray(img2);
+
+    cv::Mat im;
+    int proccIm = 0;
+    int seq = 0;
+    for (int ni = 0; ni < nImages[seq]; ni++, proccIm++) {
+
+      // Read image from file
+      im = cv::imread(vstrImageFilenames[seq][ni], cv::IMREAD_UNCHANGED);
+      double tframe = vTimestampsCam[seq][ni];
+
+      if (im.empty()) {
+        cerr << endl
+             << "Failed to load image at: " << vstrImageFilenames[seq][ni]
+             << endl;
+        // return 1;
+        return py::array();
+      }
+
+      // #ifdef COMPILEDWITHC11
+      std::chrono::steady_clock::time_point t1 =
+          std::chrono::steady_clock::now();
+      // #else
+      //       std::chrono::monotonic_clock::time_point t1 =
+      //           std::chrono::monotonic_clock::now();
+      // #endif
+
+      // Pass the image to the SLAM system
+      // cout << "tframe = " << tframe << endl;
+      SLAM_System.TrackMonocular(im,
+                                 tframe); // TODO change to monocular_inertial
+
+      // #ifdef COMPILEDWITHC11
+      std::chrono::steady_clock::time_point t2 =
+          std::chrono::steady_clock::now();
+      // #else
+      //       std::chrono::monotonic_clock::time_point t2 =
+      //           std::chrono::monotonic_clock::now();
+      // #endif
+
+      double ttrack =
+          std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1)
+              .count();
+
+      vTimesTrack[ni] = ttrack;
+
+      // Wait to load the next frame
+      double T = 0;
+      if (ni < nImages[seq] - 1)
+        T = vTimestampsCam[seq][ni + 1] - tframe;
+      else if (ni > 0)
+        T = tframe - vTimestampsCam[seq][ni - 1];
+
+      if (ttrack < T)
+        usleep((T - ttrack) * 1e6); // 1e6
+    }
+
+    // if (seq < num_seq - 1) {
+    //   cout << "Changing the dataset" << endl;
+
+    //   SLAM_System.ChangeDataset();
+    // }
+    return CVT::mat_to_nparray(img2);
+  }
+
+private:
+  ORB_SLAM3::System SLAM_System;
+  vector<vector<string>> vstrImageFilenames;
+  vector<vector<double>> vTimestampsCam;
+  vector<int> nImages;
+  vector<float> vTimesTrack;
+};
+
 PYBIND11_MODULE(orbslam, m) {
   m.doc() = R"pbdoc(
         ORB_SLAM3 python binding
@@ -216,6 +344,12 @@ PYBIND11_MODULE(orbslam, m) {
         py::arg("data_path") = ARG3, py::arg("timestamp_file") = ARG4,
         py::arg("data_name") = ARG5);
 
+  py::class_<System>(m, "System")
+      .def(py::init<const string, const string, const string>(),
+           py::arg("vac_file") = ARG1, py::arg("config_file") = ARG2,
+           py::arg("data_path") = ARG3)
+      // .def("step", &SLAM_Bind::step, py::arg("input_image"));
+      .def("step", &System::step);
   //     m.def("subtract", [](int i, int j) { return i - j; }, R"pbdoc(
   //         Subtract two numbers
 

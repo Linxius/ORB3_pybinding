@@ -15,6 +15,7 @@ extern/ORB_SLAM3
 extern/ORB_SLAM3/include
 extern/ORB_SLAM3/include/CameraModels
 ${OpenCV_INCLUDE_DIRS}
+src/
 # ${EIGEN3_INCLUDE_DIR}
 # ${Pangolin_INCLUDE_DIRS}
 # ${Boost_INCLUDE_DIRS}
@@ -30,7 +31,7 @@ ${OpenCV_INCLUDE_DIRS}
 
 MESSAGE("PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 # pybind11_add_module(cmake_example src/main.cpp)
-pybind11_add_module(orbslam src/slam.cc)
+pybind11_add_module(orbslam src/slam.cc src/cvt.cpp)
 # target_link_libraries(orbslam PRIVATE extern/ORB3_pybinding/extern/ORB_SLAM3/lib/Release/ORB_SLAM3)
 link_directories(extern/ORB3_pybinding/extern/ORB_SLAM3/lib/Release)
 target_link_libraries(orbslam PRIVATE ORB_SLAM3)

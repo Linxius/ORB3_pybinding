@@ -104,19 +104,6 @@ class CMakeBuild(build_ext):
         )
 
 
-# The information here can also be placed in setup.cfg - better separation of
-# logic and declaration, and simpler if you include description/version in a file.
-# setup(
-#     name="cmake_example",
-#     version="0.0.1",
-#     author="Dean Moldovan",
-#     author_email="dean0x7d@gmail.com",
-#     description="A test project using pybind11 and CMake",
-#     long_description="",
-#     ext_modules=[CMakeExtension("cmake_example")],
-#     cmdclass={"build_ext": CMakeBuild},
-#     zip_safe=False,
-# )
 setup(
     name="orbslam",
     version="0.0.1",

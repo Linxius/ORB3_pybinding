@@ -26,9 +26,31 @@ public:
       return py::array();
     }
 
-    SLAM_System.TrackMonocular(im, tframe);
+    cv::Mat camera_pose = SLAM_System.TrackMonocular(im, tframe);
 
-    return CVT::mat_to_nparray(im);
+    return CVT::mat_to_nparray(camera_pose);
+  }
+
+  std::vector<std::pair<py::array, py::array>> get_map_points() {
+
+    std::vector<ORB_SLAM3::MapPoint *> vMapPoints =
+        SLAM_System.GetTrackedMapPoints();
+
+    std::vector<std::pair<py::array, py::array>> mapPoints;
+    cv::Mat pos_m;
+    cv::Mat normal_m;
+    py::array pos;
+    py::array normal;
+    for (int i = 0; i < vMapPoints.size(); i++) {
+      if (vMapPoints[i] != NULL) {
+        pos_m = (*(vMapPoints[i])).GetWorldPos();
+        pos = CVT::mat_to_nparray(pos_m);
+        normal_m = (*(vMapPoints[i])).GetNormal();
+        normal = CVT::mat_to_nparray(normal_m);
+        mapPoints.push_back(std::make_pair(pos, normal));
+      }
+    }
+    return mapPoints;
   }
 
 private:
@@ -43,6 +65,7 @@ PYBIND11_MODULE(orbslam, m) {
   py::class_<System>(m, "System")
       .def(py::init<const string, const string>(), py::arg("vacabulary") = ARG1,
            py::arg("config") = ARG2)
+      .def("get_map_points", &System::get_map_points)
       .def("step", &System::step);
 
   // #ifdef VERSION_INFO

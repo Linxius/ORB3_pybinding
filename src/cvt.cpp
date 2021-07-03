@@ -39,7 +39,8 @@ py::capsule make_capsule(cv::Mat &m) {
 
 py::array mat_to_nparray(cv::Mat &m) {
   if (!m.isContinuous()) {
-    throw std::invalid_argument("Only continuous Mats supported.");
+    // throw std::invalid_argument("Only continuous Mats supported.");
+    m = m.clone();
   }
 
   return py::array(determine_np_dtype(m.depth()), determine_shape(m), m.data,

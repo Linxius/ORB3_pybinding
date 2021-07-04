@@ -6,3 +6,6 @@ _generate/
 *.py[cod]
 *.egg-info
 *env*
+
+*Release*
+*Debug*
